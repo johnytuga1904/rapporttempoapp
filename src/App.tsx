@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { useRoutes, Routes, Route } from "react-router-dom";
 import Home from "./components/home";
 import { LoginPage } from "./pages/auth/LoginPage";
-import { RegisterPage } from "./pages/auth/RegisterPage";
+import { RegisterPage } from './pages/auth/RegisterPage';
 import routes from "tempo-routes";
 
 function App() {

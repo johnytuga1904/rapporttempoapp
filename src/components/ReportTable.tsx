@@ -17,7 +17,7 @@ import {
   DialogFooter,
 } from "../components/ui/dialog";
 import { Input } from "../components/ui/input";
-import { Pencil, Trash2, AlertCircle } from "lucide-react";
+import { Pencil, Trash2, AlertCircle, CalendarIcon } from "lucide-react";
 import { ScrollArea } from "../components/ui/scroll-area";
 import {
   AlertDialog,
@@ -29,10 +29,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "../components/ui/alert-dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "../components/ui/popover";
+import { Calendar } from "../components/ui/calendar";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 interface WorkEntry {
   id: string;
-  date: string;
+  date: Date;
   name: string;
   orderNumber: string;
   location: string;
@@ -40,6 +44,75 @@ interface WorkEntry {
   regularHours: number;
   overtimeHours: number;
   absenceHours: number;
+}
+
+interface EditDialogProps {
+  entry: WorkEntry;
+  isOpen: boolean;
+  onClose: () => void;
+  onSave: (entry: WorkEntry) => void;
+}
+
+function EditDialog({ entry, isOpen, onClose, onSave }: EditDialogProps) {
+  const [editedEntry, setEditedEntry] = useState<WorkEntry>({ ...entry });
+
+  const handleSave = () => {
+    onSave(editedEntry);
+    onClose();
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Eintrag bearbeiten</DialogTitle>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <div className="grid grid-cols-4 items-center gap-4">
+            <label htmlFor="date">Datum</label>
+            <div className="col-span-3">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant={"outline"}
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !editedEntry.date && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {editedEntry.date ? format(editedEntry.date, "PPP") : <span>Datum auswählen</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={editedEntry.date}
+                    onSelect={(date) => setEditedEntry({ ...editedEntry, date: date || new Date() })}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <label htmlFor="orderNumber">Auftrag Nr.</label>
+            <Input
+              id="orderNumber"
+              value={editedEntry.orderNumber}
+              onChange={(e) =>
+                setEditedEntry({ ...editedEntry, orderNumber: e.target.value })
+              }
+              className="col-span-3"
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button onClick={handleSave}>Speichern</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
 }
 
 interface ReportTableProps {
@@ -52,7 +125,7 @@ const ReportTable: React.FC<ReportTableProps> = ({
   entries = [
     {
       id: "1",
-      date: "2023-06-15",
+      date: new Date("2023-06-15"),
       name: "Max Mustermann",
       orderNumber: "ZH-2023-001",
       location: "Zürich",
@@ -63,7 +136,7 @@ const ReportTable: React.FC<ReportTableProps> = ({
     },
     {
       id: "2",
-      date: "2023-06-16",
+      date: new Date("2023-06-16"),
       name: "Max Mustermann",
       orderNumber: "ZH-2023-001",
       location: "Winterthur",
@@ -172,7 +245,39 @@ const ReportTable: React.FC<ReportTableProps> = ({
               entries.map((entry) => (
                 <TableRow key={entry.id}>
                   <TableCell>
-                    {new Date(entry.date).toLocaleDateString("de-CH")}
+                    <div className="relative">
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <div className="flex">
+                            <Input
+                              value={format(entry.date, "dd.MM.yyyy")}
+                              readOnly
+                              className="pr-10 cursor-pointer"
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              className="absolute right-0 px-3 h-full"
+                            >
+                              <CalendarIcon className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={entry.date}
+                            onSelect={(date) => {
+                              if (date) {
+                                const updatedEntry = { ...entry, date };
+                                handleInputChange("date", date);
+                              }
+                            }}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
                   </TableCell>
                   <TableCell>{entry.name}</TableCell>
                   <TableCell>{entry.orderNumber}</TableCell>
@@ -240,17 +345,34 @@ const ReportTable: React.FC<ReportTableProps> = ({
           </DialogHeader>
           {editedEntry && (
             <div className="grid gap-3 sm:gap-4 py-3 sm:py-4">
-              <div className="grid grid-cols-3 sm:grid-cols-4 items-center gap-2 sm:gap-4">
+              <div className="grid grid-cols-4 items-center gap-4">
                 <label htmlFor="edit-date" className="text-right">
                   Datum:
                 </label>
-                <Input
-                  id="edit-date"
-                  type="date"
-                  value={editedEntry.date}
-                  onChange={(e) => handleInputChange("date", e.target.value)}
-                  className="col-span-3"
-                />
+                <div className="col-span-3">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant={"outline"}
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !editedEntry.date && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {editedEntry.date ? format(editedEntry.date, "PPP") : <span>Datum auswählen</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={editedEntry.date}
+                        onSelect={(date) => handleInputChange("date", date || new Date())}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <label htmlFor="edit-name" className="text-right">
