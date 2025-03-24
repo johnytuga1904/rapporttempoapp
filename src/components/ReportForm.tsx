@@ -63,9 +63,7 @@ export default function ReportForm({
     ...initialData,
   });
 
-  const [voiceField, setVoiceField] = useState<keyof ReportFormData | null>(
-    null,
-  );
+  const [voiceField, setVoiceField] = useState<keyof ReportFormData | null>(null);
 
   const handleInputChange = (field: keyof ReportFormData, value: any) => {
     setFormData((prev) => ({
@@ -130,9 +128,7 @@ export default function ReportForm({
                   type="button"
                   variant="outline"
                   onClick={() => activateVoiceFor("name")}
-                  className={cn(
-                    voiceField === "name" ? "ring-2 ring-primary" : "",
-                  )}
+                  className={cn(voiceField === "name" ? "ring-2 ring-primary" : "")}
                 >
                   Sprache
                 </Button>
@@ -142,34 +138,37 @@ export default function ReportForm({
             {/* Date Field */}
             <div className="space-y-2">
               <Label htmlFor="date">Datum</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant={"outline"}
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !formData.date && "text-muted-foreground",
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {formData.date ? (
-                      format(formData.date, "PPP")
-                    ) : (
-                      <span>Datum auswählen</span>
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={formData.date}
-                    onSelect={(date) =>
-                      handleInputChange("date", date || new Date())
-                    }
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <div className="flex">
+                        <Input
+                          id="date"
+                          value={format(formData.date, "dd.MM.yyyy")}
+                          readOnly
+                          className="flex-1 cursor-pointer"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="absolute right-0 px-3"
+                        >
+                          <CalendarIcon className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={formData.date}
+                        onSelect={(date) => handleInputChange("date", date || new Date())}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </div>
             </div>
 
             {/* Order Number Field */}
@@ -179,9 +178,7 @@ export default function ReportForm({
                 <Input
                   id="orderNumber"
                   value={formData.orderNumber}
-                  onChange={(e) =>
-                    handleInputChange("orderNumber", e.target.value)
-                  }
+                  onChange={(e) => handleInputChange("orderNumber", e.target.value)}
                   placeholder="Auftragsnummer eingeben"
                   className="flex-1"
                 />
@@ -189,9 +186,7 @@ export default function ReportForm({
                   type="button"
                   variant="outline"
                   onClick={() => activateVoiceFor("orderNumber")}
-                  className={cn(
-                    voiceField === "orderNumber" ? "ring-2 ring-primary" : "",
-                  )}
+                  className={cn(voiceField === "orderNumber" ? "ring-2 ring-primary" : "")}
                 >
                   Sprache
                 </Button>
@@ -213,9 +208,7 @@ export default function ReportForm({
                   type="button"
                   variant="outline"
                   onClick={() => activateVoiceFor("location")}
-                  className={cn(
-                    voiceField === "location" ? "ring-2 ring-primary" : "",
-                  )}
+                  className={cn(voiceField === "location" ? "ring-2 ring-primary" : "")}
                 >
                   Sprache
                 </Button>
@@ -237,9 +230,7 @@ export default function ReportForm({
                   type="button"
                   variant="outline"
                   onClick={() => activateVoiceFor("objects")}
-                  className={cn(
-                    voiceField === "objects" ? "ring-2 ring-primary" : "",
-                  )}
+                  className={cn(voiceField === "objects" ? "ring-2 ring-primary" : "")}
                 >
                   Sprache
                 </Button>
@@ -261,9 +252,7 @@ export default function ReportForm({
                   type="button"
                   variant="outline"
                   onClick={() => activateVoiceFor("notes")}
-                  className={cn(
-                    voiceField === "notes" ? "ring-2 ring-primary" : "",
-                  )}
+                  className={cn(voiceField === "notes" ? "ring-2 ring-primary" : "")}
                 >
                   Sprache
                 </Button>

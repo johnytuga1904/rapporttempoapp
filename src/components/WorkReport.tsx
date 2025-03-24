@@ -15,11 +15,14 @@ import LocationAutocomplete from "./LocationAutocomplete";
 import ObjectAutocomplete from "./ObjectAutocomplete";
 import DateRangePicker from "./DateRangePicker";
 import FileUpload from "./FileUpload";
-import { Edit, Trash2 } from "lucide-react";
+import { Edit, Trash2, CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 
 interface WorkEntry {
-  date: string;
+  date: Date;
   orderNumber: string;
   location: string;
   object: string;
@@ -60,7 +63,38 @@ const EntryRow = memo(
   }) => {
     return (
       <TableRow>
-        <TableCell className="border text-foreground">{entry.date}</TableCell>
+        <TableCell className="border text-foreground">
+          <div className="relative">
+            <Popover>
+              <PopoverTrigger asChild>
+                <div className="flex">
+                  <Input
+                    value={format(entry.date, "dd.MM.yyyy")}
+                    readOnly
+                    className="pr-10 cursor-pointer"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="absolute right-0 px-3 h-full"
+                  >
+                    <CalendarIcon className="h-4 w-4" />
+                  </Button>
+                </div>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={entry.date}
+                  onSelect={(date) => {
+                    onEdit(index, { ...entry, date: date || new Date() });
+                  }}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+        </TableCell>
         <TableCell className="border text-foreground">
           {entry.orderNumber}
         </TableCell>
@@ -120,7 +154,7 @@ EntryRow.displayName = "EntryRow";
 
 // Default empty entry
 const emptyEntry: WorkEntry = {
-  date: "",
+  date: new Date(),
   orderNumber: "",
   location: "",
   object: "",
@@ -357,12 +391,28 @@ export default function WorkReport({
                 {/* Input row for new entries */}
                 <TableRow>
                   <TableCell className="border">
-                    <Input
-                      type="text"
-                      value={newEntry.date}
-                      onChange={handleDateChange}
-                      placeholder="Tag eingeben"
-                    />
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant={"outline"}
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !newEntry.date && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {format(newEntry.date, "dd.MM.yyyy")}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={newEntry.date}
+                          onSelect={(date) => handleNewEntryChange("date", date || new Date())}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
                   </TableCell>
                   <TableCell className="border">
                     <Input
