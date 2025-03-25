@@ -270,7 +270,7 @@ const ReportTable: React.FC<ReportTableProps> = ({
                             onSelect={(date) => {
                               if (date) {
                                 const updatedEntry = { ...entry, date };
-                                handleInputChange("date", date);
+                                handleInputChange("date", date.toISOString());
                               }
                             }}
                             initialFocus
@@ -367,7 +367,7 @@ const ReportTable: React.FC<ReportTableProps> = ({
                       <Calendar
                         mode="single"
                         selected={editedEntry.date}
-                        onSelect={(date) => handleInputChange("date", date || new Date())}
+                        onSelect={(date) => handleInputChange("date", date?.toISOString() || new Date().toISOString())}
                         initialFocus
                       />
                     </PopoverContent>

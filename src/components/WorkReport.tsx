@@ -35,17 +35,9 @@ interface WorkEntry {
   notes?: string;
 }
 
-interface WorkReportProps {
-  initialData?: {
-    name: string;
-    period: string;
-    entries: WorkEntry[];
-  } | null;
-  onDataChange?: (data: {
-    name: string;
-    period: string;
-    entries: WorkEntry[];
-  }) => void;
+export interface WorkReportProps {
+  report: any;
+  onDataChange?: (data: any) => void;
 }
 
 // Memoized table row component to prevent unnecessary re-renders
@@ -167,25 +159,20 @@ const emptyEntry: WorkEntry = {
   notes: "",
 };
 
-export default function WorkReport({
-  initialData = null,
-  onDataChange = () => {},
-}: WorkReportProps) {
-  const [name, setName] = useState<string>(initialData?.name || "");
-  const [period, setPeriod] = useState<string>(initialData?.period || "");
-  const [entries, setEntries] = useState<WorkEntry[]>(
-    initialData?.entries || [],
-  );
+const WorkReport: React.FC<WorkReportProps> = ({ report, onDataChange }) => {
+  const [name, setName] = useState<string>("");
+  const [period, setPeriod] = useState<string>("");
+  const [entries, setEntries] = useState<WorkEntry[]>([]);
   const [newEntry, setNewEntry] = useState<WorkEntry>({ ...emptyEntry });
 
-  // Update state when initialData changes
+  // Update state when report changes
   useEffect(() => {
-    if (initialData) {
-      setName(initialData.name || "");
-      setPeriod(initialData.period || "");
-      setEntries(initialData.entries || []);
+    if (report) {
+      setName(report.name || "");
+      setPeriod(report.period || "");
+      setEntries(report.entries || []);
     }
-  }, [initialData]);
+  }, [report]);
 
   // Calculate totals - memoize calculations to prevent recalculations on every render
   const totals = useCallback(() => {
@@ -209,15 +196,17 @@ export default function WorkReport({
     requiredHours: totalRequiredHours,
   } = totals();
 
-  // Update parent component when data changes - debounced to prevent too many updates
+  // Update parent component when data changes
   useEffect(() => {
     const timer = setTimeout(() => {
-      onDataChange({
-        name,
-        period,
-        entries,
-      });
-    }, 300); // 300ms debounce
+      if (onDataChange) {
+        onDataChange({
+          name,
+          period,
+          entries,
+        });
+      }
+    }, 300);
 
     return () => clearTimeout(timer);
   }, [name, period, entries, onDataChange]);
@@ -559,4 +548,6 @@ export default function WorkReport({
       </Card>
     </div>
   );
-}
+};
+
+export default WorkReport;

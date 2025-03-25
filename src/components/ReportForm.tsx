@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CalendarIcon, ClipboardList, Save } from "lucide-react";
+import { CalendarIcon, ClipboardList, Save, Mic } from "lucide-react";
 import {
   Popover,
   PopoverContent,
@@ -25,9 +25,10 @@ import ObjectAutocomplete from "./ObjectAutocomplete";
 import HoursCalculator from "./HoursCalculator";
 import VoiceInput from "./VoiceInput";
 
-interface ReportFormProps {
+export interface ReportFormProps {
   onSubmit?: (formData: ReportFormData) => void;
   initialData?: Partial<ReportFormData>;
+  onReportGenerated: (report: any) => void;
 }
 
 export interface ReportFormData {
@@ -54,10 +55,11 @@ const defaultFormData: ReportFormData = {
   absenceHours: 0,
 };
 
-export default function ReportForm({
+const ReportForm: React.FC<ReportFormProps> = ({
   onSubmit,
   initialData = {},
-}: ReportFormProps) {
+  onReportGenerated,
+}) => {
   const [formData, setFormData] = useState<ReportFormData>({
     ...defaultFormData,
     ...initialData,
@@ -174,21 +176,22 @@ export default function ReportForm({
             {/* Order Number Field */}
             <div className="space-y-2">
               <Label htmlFor="orderNumber">Auftragsnummer</Label>
-              <div className="flex gap-2">
+              <div className="flex items-center gap-2">
                 <Input
-                  id="orderNumber"
+                  type="text"
                   value={formData.orderNumber}
                   onChange={(e) => handleInputChange("orderNumber", e.target.value)}
-                  placeholder="Auftragsnummer eingeben"
+                  placeholder="Auftrag Nr."
                   className="flex-1"
                 />
                 <Button
                   type="button"
                   variant="outline"
+                  size="icon"
                   onClick={() => activateVoiceFor("orderNumber")}
-                  className={cn(voiceField === "orderNumber" ? "ring-2 ring-primary" : "")}
+                  className="h-8 w-8"
                 >
-                  Sprache
+                  <Mic className="h-4 w-4" />
                 </Button>
               </div>
             </div>
@@ -281,4 +284,6 @@ export default function ReportForm({
       </CardContent>
     </Card>
   );
-}
+};
+
+export default ReportForm;

@@ -1,95 +1,134 @@
-import React, { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { useState } from 'react';
+import ReportForm, { ReportFormProps } from '@/components/ReportForm';
+import WorkReport, { WorkReportProps } from '@/components/WorkReport';
 import { Button } from "@/components/ui/button";
-import { CalendarIcon } from "lucide-react";
-import { format } from "date-fns";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import { cn } from "@/lib/utils";
+import { supabase } from "@/lib/supabase";
+import { useNavigate } from "react-router-dom";
+import { BackToDashboardButton } from "@/components/BackToDashboardButton";
+import { Download, Mail, Save, FileText } from "lucide-react";
 
-interface WorkEntry {
-  id: string;
-  date: Date;
-  orderNumber: string;
-  location: string;
-  objects: string;
-  regularHours: number;
-  overtimeHours: number;
-  absenceHours: number;
-  notes: string;
-}
+export function WorkReportPage() {
+  const [report, setReport] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+  const navigate = useNavigate();
 
-export default function WorkReportPage() {
-  const [entries, setEntries] = useState<WorkEntry[]>([
-    {
-      id: "1",
-      date: new Date(),
-      orderNumber: "",
-      location: "",
-      objects: "",
-      regularHours: 0,
-      overtimeHours: 0,
-      absenceHours: 0,
-      notes: "",
-    },
-  ]);
+  const handleReportChange = (updatedReport: any) => {
+    setReport(prev => ({
+      ...prev,
+      ...updatedReport
+    }));
+  };
+
+  const handleSave = async () => {
+    if (!report) return;
+    setLoading(true);
+    setError(null);
+    setSuccess(false);
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Nicht eingeloggt');
+
+      const { error } = await supabase
+        .from('reports')
+        .insert({
+          user_id: user.id,
+          report_data: report,
+          created_at: new Date().toISOString()
+        });
+
+      if (error) throw error;
+      setSuccess(true);
+    } catch (error) {
+      console.error('Fehler beim Speichern:', error);
+      setError(error instanceof Error ? error.message : 'Fehler beim Speichern');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleExport = () => {
+    if (!report) return;
+    // Excel-Export-Logik hier
+    console.log('Exportiere nach Excel:', report);
+  };
+
+  const handleEmail = () => {
+    if (!report) return;
+    // E-Mail-Versand-Logik hier
+    console.log('Sende per E-Mail:', report);
+  };
 
   return (
     <div className="container mx-auto p-4">
-      <Card>
-        <CardContent className="p-6">
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="relative">
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <div className="flex">
-                      <Input
-                        value={format(entries[0].date, "dd.MM.yyyy")}
-                        readOnly
-                        className="pr-10 cursor-pointer"
-                        placeholder="Datum auswählen"
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        className="absolute right-0 px-3 h-full"
-                      >
-                        <CalendarIcon className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={entries[0].date}
-                      onSelect={(date) => {
-                        if (date) {
-                          const newEntries = [...entries];
-                          newEntries[0] = { ...newEntries[0], date };
-                          setEntries(newEntries);
-                        }
-                      }}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-              <Input
-                placeholder="Auftrag Nr."
-                value={entries[0].orderNumber}
-                onChange={(e) => {
-                  const newEntries = [...entries];
-                  newEntries[0] = { ...newEntries[0], orderNumber: e.target.value };
-                  setEntries(newEntries);
-                }}
-              />
-            </div>
-            {/* Rest of your form fields */}
+      <BackToDashboardButton />
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <ReportForm onReportGenerated={setReport} />
+        </div>
+        <div>
+          <WorkReport report={report} onDataChange={handleReportChange} />
+        </div>
+      </div>
+
+      {report && (
+        <div className="mt-4 flex justify-between">
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={handleExport}
+              className="flex items-center gap-2"
+            >
+              <Download className="h-4 w-4" />
+              Excel exportieren
+            </Button>
+
+            <Button
+              variant="outline"
+              onClick={handleEmail}
+              className="flex items-center gap-2"
+            >
+              <Mail className="h-4 w-4" />
+              Per E-Mail senden
+            </Button>
           </div>
-        </CardContent>
-      </Card>
+
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => navigate('/saved-reports')}
+              className="flex items-center gap-2"
+            >
+              <FileText className="h-4 w-4" />
+              Gespeicherte Berichte
+            </Button>
+
+            <Button
+              onClick={handleSave}
+              disabled={loading}
+              className="flex items-center gap-2"
+            >
+              <Save className="h-4 w-4" />
+              Speichern
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {error && (
+        <div className="mt-4 p-4 bg-red-100 text-red-700 rounded">
+          {error}
+        </div>
+      )}
+
+      {success && (
+        <div className="mt-4 p-4 bg-green-100 text-green-700 rounded">
+          Bericht erfolgreich gespeichert!
+        </div>
+      )}
     </div>
   );
 } 

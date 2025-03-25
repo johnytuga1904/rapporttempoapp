@@ -14,6 +14,7 @@ export function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,7 +34,31 @@ export function LoginPage() {
         throw error;
       }
 
-      navigate('/');
+      navigate('/home');
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Ein Fehler ist aufgetreten');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResetPassword = async () => {
+    if (!email) {
+      setError('Bitte geben Sie Ihre E-Mail-Adresse ein');
+      return;
+    }
+
+    setError(null);
+    setLoading(true);
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+
+      if (error) throw error;
+
+      setResetSent(true);
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Ein Fehler ist aufgetreten');
     } finally {
@@ -81,19 +106,37 @@ export function LoginPage() {
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
+            {resetSent && (
+              <Alert>
+                <AlertDescription>
+                  Eine E-Mail zum Zurücksetzen des Passworts wurde an {email} gesendet.
+                </AlertDescription>
+              </Alert>
+            )}
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? 'Anmelden...' : 'Anmelden'}
             </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              className="w-full"
-              onClick={() => navigate('/register')}
-            >
-              Noch kein Konto? Registrieren
-            </Button>
+            <div className="flex flex-col space-y-2 w-full">
+              <Button
+                type="button"
+                variant="ghost"
+                className="w-full"
+                onClick={() => navigate('/register')}
+              >
+                Noch kein Konto? Registrieren
+              </Button>
+              <Button
+                type="button"
+                variant="link"
+                className="w-full text-sm"
+                onClick={handleResetPassword}
+                disabled={loading || !email}
+              >
+                Passwort vergessen?
+              </Button>
+            </div>
           </CardFooter>
         </form>
       </Card>
